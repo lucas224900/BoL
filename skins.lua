@@ -1,7 +1,8 @@
-local version = "1.3"
+local version = "1.4"
 
 --Global Skin Changer by Perplexity--
 --Updated by lucas22490--
+-- test --
 
 local autoupdateenabled = true
 local UPDATE_SCRIPT_NAME = "skins"
