@@ -1,8 +1,9 @@
+local version = 1.3
+
 --Global Skin Changer by Perplexity--
 --Updated by lucas22490--
 
 
-local version = 1.3
 local AUTOUPDATE = true
 local UPDATE_NAME = "skins"
 local UPDATE_HOST = "raw.github.com"
