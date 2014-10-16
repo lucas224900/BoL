@@ -5,8 +5,8 @@
 local version = 1.3
 local autoupdateenabled = true
 local UPDATE_SCRIPT_NAME = "skins"
-local UPDATE_HOST = "bitbucket.org"
-local UPDATE_PATH = "/lucas22490/bol/raw/master/skins.lua"
+local UPDATE_HOST = "raw.github.com"
+local UPDATE_PATH = "/lucas224900/BoL/master/skins.lua"
 local UPDATE_FILE_PATH = SCRIPT_PATH..GetCurrentEnv().FILE_NAME
 local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
 
