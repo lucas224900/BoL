@@ -1,9 +1,9 @@
 local Version = "8.4.1"
-local Name = 'Vals Katarina'
+local Name = 'ValsKatarina'
 local Author = 'Valdorian'
 
 local autoupdateenabled = true
-local UPDATE_SCRIPT_NAME = "Vals Katarina"
+local UPDATE_SCRIPT_NAME = "ValsKatarina"
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/lucas224900/BoL/master/ValsKatarina.lua"
 local UPDATE_FILE_PATH = SCRIPT_PATH..GetCurrentEnv().FILE_NAME
