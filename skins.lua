@@ -1,4 +1,4 @@
-local version = "1.32"
+local version = "1.40"
 
 --Global Skin Changer by Perplexity--
 --Updated by lucas22490--
@@ -171,7 +171,7 @@ function OnLoad()
     menu:addParam("skin"..i, skin, SCRIPT_PARAM_ONOFF, false)
   end
   
-   print("<font color=\"#FF0000\">Skin Changer loaded. Pick a skin from the menu! Updated 11/05/2014 by lucas22490</font>")
+   print("<font color=\"#FF0000\">Skin Changer loaded. Pick a skin from the menu! Updated 11/20/2014 by lucas22490</font>")
 end
 
 function OnDraw()
