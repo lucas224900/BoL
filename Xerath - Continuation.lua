@@ -38,8 +38,8 @@ if DOWNLOADING_LIBS then return end
 
 local autoupdateenabled = true
 local UPDATE_SCRIPT_NAME = "Xerath - Continuation"
-local UPDATE_HOST = "raw.githubusercontent.com"
-local UPDATE_PATH = "/lucas224900/BoL/master/Xerath - Continuation.lua"
+local UPDATE_HOST = "raw.github.com"
+local UPDATE_PATH = "/lucas224900/BoL/master/Xerath%20-%20Continuation.lua"
 local UPDATE_FILE_PATH = SCRIPT_PATH..GetCurrentEnv().FILE_NAME
 local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
 
