@@ -6,7 +6,6 @@ function PrintMessage(message)
 	print("<font color=\"#81BEF7\">Xerath - Continuation:</font> <font color=\"#ff8b00\">" .. message .. "</font>")
 end
 
-_G.UseUpdater = true
 _G.UseSkinHack = true
 
 local REQUIRED_LIBS = {
@@ -37,31 +36,36 @@ end
 
 if DOWNLOADING_LIBS then return end
 
-local UPDATE_NAME = "Xerath - Continuation"
+local autoupdateenabled = true
+local UPDATE_SCRIPT_NAME = "Xerath - Continuation"
 local UPDATE_HOST = "raw.githubusercontent.com"
-local UPDATE_PATH = "/lucas224900/BoL/master/Xerath - Continuation.lua" .. "?rand=" .. math.random(1, 10000)
+local UPDATE_PATH = "/lucas224900/BoL/master/Xerath - Continuation.lua"
 local UPDATE_FILE_PATH = SCRIPT_PATH..GetCurrentEnv().FILE_NAME
-local UPDATE_URL = "http://"..UPDATE_HOST..UPDATE_PATH
+local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
 
-function AutoupdaterMsg(msg) print("<b><font color=\"#6699FF\">"..UPDATE_NAME..":</font></b> <font color=\"#FFFFFF\">"..msg..".</font>") end
-if _G.UseUpdater then
-	local ServerData = GetWebResult(UPDATE_HOST, UPDATE_PATH)
-	if ServerData then
-		local ServerVersion = string.match(ServerData, "local version = \"%d+.%d+\"")
-		ServerVersion = string.match(ServerVersion and ServerVersion or "", "%d+.%d+")
-		if ServerVersion then
-			ServerVersion = tonumber(ServerVersion)
-			if tonumber(version) < ServerVersion then
-				AutoupdaterMsg("New version available "..ServerVersion)
-				AutoupdaterMsg("Updating, please don't press F9")
-				DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () AutoupdaterMsg("Successfully updated. ("..version.." => "..ServerVersion.."), press F9 twice to load the updated version.") end)	 
-			else
-				AutoupdaterMsg("You have got the latest version ("..ServerVersion..")")
+local ServerData
+if autoupdateenabled then
+	GetAsyncWebResult(UPDATE_HOST, UPDATE_PATH, function(d) ServerData = d end)
+	function update()
+		if ServerData ~= nil then
+			local ServerVersion
+			local send, tmp, sstart = nil, string.find(ServerData, "local version = \"")
+			if sstart then
+				send, tmp = string.find(ServerData, "\"", sstart+1)
 			end
+			if send then
+				ServerVersion = tonumber(string.sub(ServerData, sstart+1, send-1))
+			end
+
+			if ServerVersion ~= nil and tonumber(ServerVersion) ~= nil and tonumber(ServerVersion) > tonumber(version) then
+				DownloadFile(UPDATE_URL.."?nocache"..myHero.charName..os.clock(), UPDATE_FILE_PATH, function () print("<font color=\"#FF0000\"><b>"..UPDATE_SCRIPT_NAME..":</b> successfully updated. Reload (double F9) Please. ("..version.." => "..ServerVersion..")</font>") end)     
+			elseif ServerVersion then
+				print("<font color=\"#FF0000\"><b>"..UPDATE_SCRIPT_NAME..":</b> You have got the latest version: <u><b>"..ServerVersion.."</b></u></font>")
+			end		
+			ServerData = nil
 		end
-	else
-		AutoupdaterMsg("Error downloading version info")
 	end
+	AddTickCallback(update)
 end
 
 local StealCharNames = {"SRU_Baron12.1.1", "SRU_Dragon6.1.1"}
