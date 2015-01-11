@@ -1,13 +1,12 @@
+local version = "1.06"
+
 if myHero.charName ~= "Xerath" or not VIP_USER then return end
 
 function PrintMessage(message)
 	print("<font color=\"#81BEF7\">Xerath - Continuation:</font> <font color=\"#ff8b00\">" .. message .. "</font>")
 end
 
-
-local version = "1.05"
-
-_G.UseUpdater = false
+_G.UseUpdater = true
 _G.UseSkinHack = true
 
 local REQUIRED_LIBS = {
@@ -39,8 +38,8 @@ end
 if DOWNLOADING_LIBS then return end
 
 local UPDATE_NAME = "Xerath - Continuation"
-local UPDATE_HOST = "raw.github.com"
-local UPDATE_PATH = "/DraconisBoL/BoL/master/Xerath%20-%20Continuation.lua" .. "?rand=" .. math.random(1, 10000)
+local UPDATE_HOST = "raw.githubusercontent.com"
+local UPDATE_PATH = "/lucas224900/BoL/master/Xerath - Continuation.lua" .. "?rand=" .. math.random(1, 10000)
 local UPDATE_FILE_PATH = SCRIPT_PATH..GetCurrentEnv().FILE_NAME
 local UPDATE_URL = "http://"..UPDATE_HOST..UPDATE_PATH
 
@@ -721,4 +720,4 @@ function AutoIgnite()
 	end
 end
 
-PrintMessage('Version 1.05 loaded successfully!')
+PrintMessage('Version 1.06 loaded successfully!')
