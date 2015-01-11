@@ -370,7 +370,7 @@ end
 TickLimiter(SetQRange, 120)
 
 function Cast2Q(to)
-	local p = CLoLPacket(259) 
+	local p = CLoLPacket(0x103) 
 	p.vTable = 18806728
     p:EncodeF(myHero.networkID)
     p:Encode1(SPELL_1)
