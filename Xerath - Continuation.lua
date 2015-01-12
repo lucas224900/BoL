@@ -1,4 +1,4 @@
-local version = "1.08"
+local version = "1.09"
 
 if myHero.charName ~= "Xerath" or not VIP_USER then return end
 
@@ -9,7 +9,7 @@ end
 _G.UseSkinHack = true
 
 local REQUIRED_LIBS = {
-	["SOW"]         = "https://raw.githubusercontent.com/gbilbao/Bilbao/master/BoL1/Common/SOW.lua",
+	["SxOrbWalk"]   = "https://raw.githubusercontent.com/Superx321/BoL/master/common/SxOrbWalk.lua",
 	["VPrediction"] = "https://raw.githubusercontent.com/Ralphlol/BoLGit/master/VPrediction.lua",
 	["SourceLib"]   = "https://raw.githubusercontent.com/gbilbao/Bilbao/master/BoL1/Common/SourceLib.lua"
 }
@@ -70,36 +70,28 @@ end
 
 local StealCharNames = {"SRU_Baron12.1.1", "SRU_Dragon6.1.1"}
 
-local Ranges = {[_Q] = {750, 1400},  [_W] = 1000, [_E] = 1050, [_R] = {3200, 4400, 5600}}
-local Widths = {[_Q] = 100, [_W] = 200, [_E] = 60, [_R] = 200}
-local Delays = {[_Q] = 0.7, [_W] = 0.7, [_E] = 0.25, [_R] = 0.9}
-local Speeds = {[_Q] = math.huge, [_W] = math.huge, [_E] = 1400, [_R] = math.huge}
-local RangeCircles = {}
-
-
-local PassiveUp = true
-local LastPing = 0
-
-local CastingQ = 0
-local CastingR = 0
-
-local MainCombo = {_Q, _W, _E, _R, _R, _R}
-local _RM = 1322
-
-local lastSkin = 0
-
-local RStartTime = 0
-local UsedCharges = 0
-
-local RCooldownTime = 0
-
+local Ranges         = {[_Q] = {750, 1400},  [_W] = 1000,      [_E] = 1050, [_R] = {3200, 4400, 5600}}
+local Widths         = {[_Q] = 100,          [_W] = 200,       [_E] = 60,   [_R] = 200}
+local Delays         = {[_Q] = 0.7,          [_W] = 0.7,       [_E] = 0.25, [_R] = 0.9}
+local Speeds         = {[_Q] = math.huge,    [_W] = math.huge, [_E] = 1400, [_R] = math.huge}
+local RangeCircles   = {}
+local PassiveUp      = true
+local LastPing       = 0
+local CastingQ       = 0
+local CastingR       = 0
+local MainCombo      = {_Q, _W, _E, _R, _R, _R}
+local _RM            = 1322
+local lastSkin       = 0
+local RStartTime     = 0
+local UsedCharges    = 0
+local RCooldownTime  = 0
 local CurrentRTarget
 local LastRTarget
-
-local RPressTime = 0
-local JSPressTime = 0
-local RTapped = false
-local RPressTime2 = false
+local RPressTime     = 0
+local JSPressTime    = 0
+local RTapped        = false
+local RPressTime2    = false
+local IsCastingQ     = false
 
 function GetClosestTargetToMouse()
 	local result
@@ -216,7 +208,6 @@ end
 
 function OnLoad()
 	VP = VPrediction()
-	SOWi = SOW(VP)
 	STS = SimpleTS(STS_PRIORITY_LESS_CAST_MAGIC)
 	DLib = DamageLib()
 	DManager = DrawManager()
@@ -254,7 +245,7 @@ function OnLoad()
 	
 	Menu = scriptConfig("Xerath - Continuation "..version.."", "Xerath")
 	Menu:addSubMenu("Orbwalking", "Orbwalking")
-		SOWi:LoadToMenu(Menu.Orbwalking, STS)
+		SxOrb:LoadToMenu(Menu.Orbwalking)
 
 	Menu:addSubMenu("Target Selector", "STS")
 		STS:AddToMenu(Menu.STS)
@@ -346,7 +337,7 @@ function OnLoad()
 
 	Menu:addParam("Version", "Version", SCRIPT_PARAM_INFO, version)
 	
-	EnemyMinions = minionManager(MINION_ENEMY, Ranges[_Q][2], myHero, MINION_SORT_MAXHEALTH_DEC)
+	EnemyMinions  = minionManager(MINION_ENEMY, Ranges[_Q][2], myHero, MINION_SORT_MAXHEALTH_DEC)
 	JungleMinions = minionManager(MINION_JUNGLE, Ranges[_Q][2], myHero, MINION_SORT_MAXHEALTH_DEC)
 end
 
@@ -369,7 +360,25 @@ function SetQRange()
 end
 TickLimiter(SetQRange, 120)
 
+function Cast1Q(to)
+	IsCastingQ = true
+	local p = CLoLPacket(0xDE) 
+	p.vTable = 18253492  
+    p:EncodeF(myHero.networkID)  
+    p:EncodeF(to.x)  
+    p:EncodeF(to.z)  
+    p:EncodeF(to.x)  
+    p:EncodeF(to.z)  
+    p:EncodeF(0)     
+    p:Encode1(SPELL_1)  
+    p.dwArg1 = 1  
+    p.dwArg2 = 0 
+    SendPacket(p)
+	IsCastingQ = false
+end
+
 function Cast2Q(to)
+	IsCastingQ = true
 	local p = CLoLPacket(0x103) 
 	p.vTable = 18806728
     p:EncodeF(myHero.networkID)
@@ -380,7 +389,9 @@ function Cast2Q(to)
     p:Encode1(2)
     p.dwArg1 = 1
     p.dwArg2 = 0
+	p:Hide()
     SendPacket(p)
+	IsCastingQ = false
 end
 
 function SetRRange()
@@ -602,6 +613,20 @@ end
 function OnSendPacket(p)
     if p.header == Packet.headers.S_MOVE and ImCastingR() then
 		p:Block()
+	elseif (p.header == 0xDE) then
+		p.pos = 26
+		local spellId = p:Decode1()
+		if (spellId == 0 and not IsCastingQ) then
+		end
+	elseif (p.header == 0x103) then
+		local QTarget = STS:GetTarget(Ranges[_Q][2])
+		if (not IsCastingQ and QTarget) then
+			p:Block()
+			local castPosition, hitChance, nTargets = Q:GetPrediction(QTarget)
+			if Q.range ~= Ranges[_Q][2] and GetDistanceSqr(castPosition) < (Q.range - 200)^2 or Q.range == Ranges[_Q][2] and GetDistanceSqr(castPosition) < (Q.range)^2 then
+				Cast2Q(castPosition)
+			end
+		end
 	end
 end
 
