@@ -1,4 +1,4 @@
-local version = "1.07"
+local version = "1.08"
 
 if myHero.charName ~= "Xerath" or not VIP_USER then return end
 
@@ -600,13 +600,7 @@ function JungleFarm()
 end
 
 function OnSendPacket(p)
-	if p.header == Packet.headers.S_MOVE and Q:IsCharging() then
-		local packet = Packet(p)
-		if packet:get("type") ~= 2 then
-			Packet('S_MOVE', {x = mousePos.x, y = mousePos.z}):send()
-			p:Block()
-		end
-	elseif p.header == Packet.headers.S_MOVE and ImCastingR() then
+    if p.header == Packet.headers.S_MOVE and ImCastingR() then
 		p:Block()
 	end
 end
@@ -724,4 +718,4 @@ function AutoIgnite()
 	end
 end
 
-PrintMessage('Version 1.07 loaded successfully!')
+PrintMessage("Version "..version.." loaded successully!")
