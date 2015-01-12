@@ -1,4 +1,4 @@
-local version = "1.06"
+local version = "1.07"
 
 if myHero.charName ~= "Xerath" or not VIP_USER then return end
 
@@ -510,7 +510,7 @@ function Combo()
 				Cast2Q(castPosition)
 			end
 		else
-			CastSpell(_Q, mousePos.x, mousePos.z)
+			Q:Charge()
 		end
 	end
 
@@ -539,7 +539,7 @@ function Harass()
 				Cast2Q(castPosition)
 			end
 		else
-			CastSpell(_Q, mousePos.x, mousePos.z)
+			Q:Charge()
 		end
 	end
 end
@@ -549,7 +549,7 @@ function Farm()
 	if Menu.Farm.UseQ then
 		if not Q:IsCharging() then
 			if #EnemyMinions.objects > 1 then
-				CastSpell(_Q, mousePos.x, mousePos.z)
+				Q:Charge()
 			end
 		else
 			local AllMinions = SelectUnits(EnemyMinions.objects, function(t) return ValidTarget(t) and GetDistanceSqr(t) < Q.rangeSqr end)
@@ -724,4 +724,4 @@ function AutoIgnite()
 	end
 end
 
-PrintMessage('Version 1.06 loaded successfully!')
+PrintMessage('Version 1.07 loaded successfully!')
