@@ -24,10 +24,17 @@ if DOWNLOADING_SOURCELIB then print("Downloading required libraries, please wait
  return
 end
 
-local autoupdateenabled = false
+local RequireI = Require("SourceLib")
+RequireI:Add("vPrediction", "https://raw.githubusercontent.com/Ralphlol/BoLGit/master/VPrediction.lua")
+RequireI:Add("SxOrbWalk",   "https://raw.githubusercontent.com/Superx321/BoL/master/common/SxOrbWalk.lua")
+RequireI:Check()
+
+if RequireI.downloadNeeded == true then return end
+
+local autoupdateenabled = true
 local UPDATE_SCRIPT_NAME = "Orianna - Continuation"
 local UPDATE_HOST = "raw.github.com"
-local UPDATE_PATH = "/lucas224900/BoL/master/Orianna%20-%20Continuation.lua"
+local UPDATE_PATH = "/lucas224900/BoL/master/Orianna - Continuation.lua"
 local UPDATE_FILE_PATH = SCRIPT_PATH..GetCurrentEnv().FILE_NAME
 local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
 
@@ -55,13 +62,6 @@ if autoupdateenabled then
 	end
 	AddTickCallback(update)
 end
-
-local RequireI = Require("SourceLib")
-RequireI:Add("vPrediction", "https://raw.githubusercontent.com/Ralphlol/BoLGit/master/VPrediction.lua")
-RequireI:Add("SxOrbWalk",   "https://raw.githubusercontent.com/Superx321/BoL/master/common/SxOrbWalk.lua")
-RequireI:Check()
-
-if RequireI.downloadNeeded == true then return end
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
