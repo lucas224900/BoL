@@ -1,4 +1,4 @@
-local version = "1.2"
+local version = "1.21"
 
 if myHero.charName ~= "Orianna" then return end
 
@@ -477,7 +477,7 @@ CastSpell(_Q, MaxPos.x, MaxPos.z)
 end
 else
 for i, minion in pairs(EnemyMinions.objects) do
-if minion.health + 15 < GetDamage(_Q, minion) and not SxOrb:InRange(minion) then
+if minion.health + 15 < GetDamage(_Q, minion) and not SxOrb:ValidTarget(minion, SxOrb:GetMyRange()) then
 local MinionPos = VP:GetPredictedPos(minion, Qdelay, BallSpeed, BallPos)
 CastSpell(_Q, MinionPos.x, MinionPos.z)
 break
@@ -788,7 +788,7 @@ end
 if Menu.Combo.UseW then
 CastW()
 end
-if target and SxOrb:InRange(target) then
+if (target and ValidTarget(target) and SxOrb:ValidTarget(target, SxOrb:GetMyRange())) then
 SxOrb:ForceTarget(target)
 end
 
