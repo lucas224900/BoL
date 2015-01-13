@@ -1,45 +1,40 @@
-local version = "1.09"
+local version = "1.2"
 
-if myHero.charName ~= "Xerath" or not VIP_USER then return end
+if myHero.charName ~= "Orianna" then return end
 
 function PrintMessage(message)
-	print("<font color=\"#81BEF7\">Xerath - Continuation:</font> <font color=\"#ff8b00\">" .. message .. "</font>")
+	print("<font color=\"#81BEF7\">Orianna - Continuation:</font> <font color=\"#ff8b00\">" .. message .. "</font>")
 end
 
-_G.UseSkinHack = true
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-local REQUIRED_LIBS = {
-	["SxOrbWalk"]   = "https://raw.githubusercontent.com/Superx321/BoL/master/common/SxOrbWalk.lua",
-	["VPrediction"] = "https://raw.githubusercontent.com/Ralphlol/BoLGit/master/VPrediction.lua",
-	["SourceLib"]   = "https://raw.githubusercontent.com/gbilbao/Bilbao/master/BoL1/Common/SourceLib.lua"
-}
+local SOURCELIB_URL = "https://raw.githubusercontent.com/gbilbao/Bilbao/master/BoL1/Common/SourceLib.lua"
+local SOURCELIB_PATH = LIB_PATH.."SourceLib.lua"
 
-local DOWNLOADING_LIBS, DOWNLOAD_COUNT = false, 0
-
-function AfterDownload()
-	DOWNLOAD_COUNT = DOWNLOAD_COUNT - 1
-	if DOWNLOAD_COUNT == 0 then
-		DOWNLOADING_LIBS = false
-		print("<b><font color=\"#6699FF\">Xerath - Continuation:</font></b> <font color=\"#FFFFFF\">Required libraries downloaded successfully, please reload (double F9).</font>")
-	end
+if FileExist(SOURCELIB_PATH) then
+require("SourceLib")
+else
+DOWNLOADING_SOURCELIB = true
+DownloadFile(SOURCELIB_URL, SOURCELIB_PATH, function() print("Required libraries downloaded successfully, please reload") end)
 end
 
-for DOWNLOAD_LIB_NAME, DOWNLOAD_LIB_URL in pairs(REQUIRED_LIBS) do
-	if FileExist(LIB_PATH .. DOWNLOAD_LIB_NAME .. ".lua") then
-		require(DOWNLOAD_LIB_NAME)
-	else
-		DOWNLOADING_LIBS = true
-		DOWNLOAD_COUNT = DOWNLOAD_COUNT + 1
-		DownloadFile(DOWNLOAD_LIB_URL, LIB_PATH .. DOWNLOAD_LIB_NAME..".lua", AfterDownload)
-	end
+if DOWNLOADING_SOURCELIB then print("Downloading required libraries, please wait...")
+ return
 end
 
-if DOWNLOADING_LIBS then return end
+local RequireI = Require("SourceLib")
+RequireI:Add("vPrediction", "https://raw.githubusercontent.com/Ralphlol/BoLGit/master/VPrediction.lua")
+RequireI:Add("SxOrbWalk",   "https://raw.githubusercontent.com/Superx321/BoL/master/common/SxOrbWalk.lua")
+RequireI:Check()
+
+if RequireI.downloadNeeded == true then return end
 
 local autoupdateenabled = true
-local UPDATE_SCRIPT_NAME = "Xerath - Continuation"
+local UPDATE_SCRIPT_NAME = "Orianna - Continuation"
 local UPDATE_HOST = "raw.github.com"
-local UPDATE_PATH = "/lucas224900/BoL/master/Xerath%20-%20Continuation.lua"
+local UPDATE_PATH = "/lucas224900/BoL/master/Orianna - Continuation.lua"
 local UPDATE_FILE_PATH = SCRIPT_PATH..GetCurrentEnv().FILE_NAME
 local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
 
@@ -68,679 +63,921 @@ if autoupdateenabled then
 	AddTickCallback(update)
 end
 
-local StealCharNames = {"SRU_Baron12.1.1", "SRU_Dragon6.1.1"}
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-local Ranges         = {[_Q] = {750, 1400},  [_W] = 1000,      [_E] = 1050, [_R] = {3200, 4400, 5600}}
-local Widths         = {[_Q] = 100,          [_W] = 200,       [_E] = 60,   [_R] = 200}
-local Delays         = {[_Q] = 0.7,          [_W] = 0.7,       [_E] = 0.25, [_R] = 0.9}
-local Speeds         = {[_Q] = math.huge,    [_W] = math.huge, [_E] = 1400, [_R] = math.huge}
-local RangeCircles   = {}
-local PassiveUp      = true
-local LastPing       = 0
-local CastingQ       = 0
-local CastingR       = 0
-local MainCombo      = {_Q, _W, _E, _R, _R, _R}
-local _RM            = 1322
-local lastSkin       = 0
-local RStartTime     = 0
-local UsedCharges    = 0
-local RCooldownTime  = 0
-local CurrentRTarget
-local LastRTarget
-local RPressTime     = 0
-local JSPressTime    = 0
-local RTapped        = false
-local RPressTime2    = false
-local IsCastingQ     = false
+local InitiatorsList    =
+{
+["Vi"]                  = "ViQ",--Q
+["Vi"]                  = "ViR",--R
+["Malphite"]            = "Landslide",--R UFSlash
+["Nocturne"]            = "NocturneParanoia",--R
+["Zac"]                 = "ZacE",--E
+["MonkeyKing"]          = "MonkeyKingNimbus",--R
+["MonkeyKing"]          = "MonkeyKingSpinToWin",--R
+["MonkeyKing"]          = "SummonerFlash",--Flash
+["Shyvana"]             = "ShyvanaTransformCast",--R
+["Thresh"]              = "threshqleap",--Q2
+["Aatrox"]              = "AatroxQ",--Q
+["Renekton"]            = "RenektonSliceAndDice",--E
+["Kennen"]              = "KennenLightningRush",--E
+["Kennen"]              = "SummonerFlash",--Flash
+["Olaf"]                = "OlafRagnarok",--R
+["Udyr"]                = "UdyrBearStance",--E
+["Volibear"]            = "VolibearQ",--Q
+["Talon"]               = "TalonCutthroat",--E
+["JarvanIV"]            = "JarvanIVDragonStrike",--Q
+["Warwick"]             = "InfiniteDuress",--R
+["Jax"]                 = "JaxLeapStrike",--Q
+["Yasuo"]               = "YasuoRKnockUpComboW",--Q
+["Diana"]               = "DianaTeleport",
+["LeeSin"]              = "BlindMonkQTwo",
+["Shen"]                = "ShenShadowDash",
+["Alistar"]             = "Headbutt",
+["Amumu"]               = "BandageToss",
+["Urgot"]               = "UrgotSwap2",
+["Rengar"]              = "RengarR",
+["Akali"]               = "AkaliShadowDance",
+["Katarina"]            = "KatarinaR",
+}
 
-function GetClosestTargetToMouse()
-	local result
-	local mindist = math.huge
+local InterruptList     =
+{
+["Katarina"]            = "KatarinaR",
+["Malzahar"]            = "AlZaharNetherGrasp",
+["Warwick"]             = "InfiniteDuress",
+["Velkoz"]              = "VelkozR"
+}
 
-	for i, enemy in ipairs(GetEnemyHeroes()) do
-		local dist = GetDistanceSqr(mousePos, enemy)
-		if ValidTarget(enemy) and dist < 1000 * 1000 then
-			if dist <= mindist then
-				mindist = dist
-				result = enemy
-			end
-		end
-	end
+local Qradius           = 80
+local Wradius           = 245
+local Eradius           = 80
+local Rradius           = 380
 
-	return result
-end
+local Qrange            = 825
+local Erange            = 1095
 
-function JungleSteal()
-	local oldrange = JungleMinions.range
-	JungleMinions.range = R.range
-	JungleMinions:update()
-	local minion = JungleMinions.objects[1]
-	if ValidTarget(minion) then
-		if table.contains(StealCharNames, minion.charName:lower()) and DLib:IsKillable(minion, {_R}) then 
-			R:Cast(minion)
-		end
-	end
-	JungleMinions.range = oldrange
-end
+local Qdelay            = 0
+local Wdelay            = 0.25
+local Edelay            = 0.25
+local Rdelay            = 0.6
 
-function HandleRCast()
-	local RTarget
-	if os.clock() - JSPressTime < 10 then
-		JungleSteal()
-		do return end
-	end
+local BallSpeed         = 1200--Q
+local BallSpeedE        = 1700--E
 
-	if not (os.clock() - RPressTime < 10) and not RPressTime2 then
-		return 
-	end
+_IGNITE                 = nil
+_AA                     = 142857
 
-	if UsedCharges == 0 and RCooldownTime == 0 then
-		if Menu.RSnipe.Advanced["Delay"..UsedCharges] ~= 0 then
-			RCooldownTime = os.clock() + Menu.RSnipe.Advanced["Delay"..UsedCharges] / 1000
-		end
-	end
+local Qdamage           = {60, 90, 120, 150, 180}
+local Qscaling          = 0.5
+local Wdamage           = {70, 115, 160, 205, 250}
+local Wscaling          = 0.7
+local Edamage           = {60, 90, 120, 150, 180}
+local Escaling          = 0.3
+local Rdamage           = {150, 225, 300}
+local Rscaling          = 0.7
+local AAdamage          = {10, 10, 10, 18, 18, 18, 26, 26, 26, 34, 34, 34, 42, 42, 42, 50, 50, 50}
+local AAscaling         = 0.15
 
-	if not CanUseNextCharge() then
-		return
-	end
+local MainCombo         = {_AA, _AA, _Q, _W, _R, _Q, _IGNITE}
+local Far               = 1.3
 
-	if Menu.RSnipe.Targetting == 2 then
-		RTarget = STS:GetTarget(R.range)
-	else
-		RTarget = GetClosestTargetToMouse()
-	end
+local BallPos           = myHero
+local BallMoving        = false
 
-	if RTarget then
-		CurrentRTarget = RTarget
-		R.packetCast = Menu.RSnipe.Advanced.Packets
-		R:Cast(RTarget)
-	end
-end
+local QREADY            = true
+local WREADY            = true
+local EREADY            = true
+local RREADY            = true
+local IGNITEREADY       = true
 
-function OnCastR(spell)
-	if spell.name == "XerathLocusOfPower2" then
-		RStartTime = os.clock()
-		UsedCharges = 0
-	end
+local VP
 
-	if spell.name == "xerathlocuspulse" then
-		UsedCharges = UsedCharges + 1
-		RPressTime2 = false
-		if CurrentRTarget and DLib:IsKillable(CurrentRTarget, {_R}) and Menu.RSnipe.Advanced.Dead then
-			RCooldownTime = os.clock() + Delays[_R]
-		end
+local Menu              = nil
 
-		if Menu.RSnipe.Advanced["Delay"..UsedCharges] and Menu.RSnipe.Advanced["Delay"..UsedCharges] ~= 0 then
-			RCooldownTime = os.clock() + Menu.RSnipe.Advanced["Delay"..UsedCharges] / 1000
-		end
+local SelectedTarget    = nil
 
-		if LastRTarget and CurrentRTarget and CurrentRTarget.hash ~= LastRTarget.hash then
-			RCooldownTime = os.clock() + Menu.RSnipe.Advanced.Delay / 1000
-		end
+local DamageToHeros     = {}
+local lastrefresh       = 0
 
-		if UsedCharges == 3 then
-			RStartTime = 0
-		end
+local ComboMode
+local _ST, _TF          = 1,2
 
-		LastRTarget = CurrentRTarget
-	end
-end
+local LastChampionSpell = {}
 
-function CanUseNextCharge()
-	if os.clock() - RCooldownTime >= 0 then
-		return true
-	end
-end
-
-function ResetRVars()
-	if not ImCastingR() then
-		CurrentRTarget = nil
-		RCooldownTime = 0
-		LastRTarget = nil
-		RStartTime = 0
-	end
-end
-TickLimiter(ResetRVars, 1)
-
-function ImCastingR()
-	return ((os.clock() - RStartTime) < 10 and (myHero:GetSpellData(_R).currentCd < 10))
-end
-
-function OnLoad()
-	VP = VPrediction()
-	STS = SimpleTS(STS_PRIORITY_LESS_CAST_MAGIC)
-	DLib = DamageLib()
-	DManager = DrawManager()
-
-	DLib:RegisterDamageSource(_Q, _MAGIC, 40, 40, _MAGIC, _AP, 0.75, function() return (player:CanUseSpell(_Q) == READY) end)
-	DLib:RegisterDamageSource(_W, _MAGIC, 30, 30, _MAGIC, _AP, 0.6, function() return (player:CanUseSpell(_W) == READY) end)
-	DLib:RegisterDamageSource(_E, _MAGIC, 50, 30, _MAGIC, _AP, 0.45, function() return (player:CanUseSpell(_E) == READY) end)
-	DLib:RegisterDamageSource(_R, _MAGIC, 135, 55, _MAGIC, _AP, 0.43, function() return (player:CanUseSpell(_R) == READY) end)
-
-	Q = Spell(_Q, Ranges[_Q][1])
-	Q:SetSkillshot(VP, SKILLSHOT_LINEAR, Widths[_Q], Delays[_Q], Speeds[_Q], false)
-	Q:SetCharged("xeratharcanopulsechargeup", 3, Ranges[_Q][2], 1.5)
-	Q:SetAOE(true)
-
-	W = Spell(_W, Ranges[_W])
-	W:SetSkillshot(VP, SKILLSHOT_CIRCULAR, Widths[_W], Delays[_W], Speeds[_W], false)
-	W:SetAOE(true)
-
-	E = Spell(_E, Ranges[_E])
-	E:SetSkillshot(VP, SKILLSHOT_LINEAR, Widths[_E], Delays[_E], Speeds[_E], true)
-
-	R = Spell(_R, Ranges[_R][1])
-	R:SetSkillshot(VP, SKILLSHOT_CIRCULAR, Widths[_R], Delays[_R], Speeds[_R], false)
-	R:TrackCasting({"XerathLocusOfPower2", "xerathlocuspulse"})
-	R:RegisterCastCallback(OnCastR)
-	
-	if myHero:GetSpellData(SUMMONER_1).name:find("summonerdot") then
-		Ignite = SUMMONER_1
-	elseif myHero:GetSpellData(SUMMONER_2).name:find("summonerdot") then
-		Ignite = SUMMONER_2
-	end
-	
-	_G.oldDrawCircle = rawget(_G, 'DrawCircle')
-	_G.DrawCircle = DrawCircle2	
-	
-	Menu = scriptConfig("Xerath - Continuation "..version.."", "Xerath")
-	Menu:addSubMenu("Orbwalking", "Orbwalking")
-		SxOrb:LoadToMenu(Menu.Orbwalking)
-
-	Menu:addSubMenu("Target Selector", "STS")
-		STS:AddToMenu(Menu.STS)
-
-	Menu:addSubMenu("Combo", "Combo")
-		Menu.Combo:addParam("UseQ", "Use Q", SCRIPT_PARAM_ONOFF , true)
-		Menu.Combo:addParam("UseW", "Use W", SCRIPT_PARAM_ONOFF, true)
-		Menu.Combo:addParam("UseE", "Use E", SCRIPT_PARAM_ONOFF, true)
-		Menu.Combo:addParam("Erange",  "E range", SCRIPT_PARAM_SLICE, Ranges[_E], 0, Ranges[_E])
-		Menu.Combo:addParam("CastE", "Use E!", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("O"))
-		Menu.Combo:addParam("Enabled", "Combo!", SCRIPT_PARAM_ONKEYDOWN, false, 32)
-		Menu.Combo:permaShow("Enabled")
-	
-	Menu:addSubMenu("Harass", "Harass")
-		Menu.Harass:addParam("UseQ", "Use Q", SCRIPT_PARAM_ONOFF , true)
-		Menu.Harass:addParam("ManaCheck", "Don't harass if mana < %", SCRIPT_PARAM_SLICE, 10, 0, 100)
-		Menu.Harass:addParam("Enabled", "Harass!", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
-		Menu.Harass:permaShow("Enabled")
-		
-	Menu:addSubMenu("RSnipe", "RSnipe")
-		
-		Menu.RSnipe:addParam("AutoR", "Use all charges", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("R"))
-		AllMenu = #Menu.RSnipe._param
-		Menu.RSnipe:addParam("AutoR2", "Use 1 charge (tap)", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("T"))
-		TapMenu = #Menu.RSnipe._param
-
-		Menu.RSnipe:addParam("JS", "Jungle Steal", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("J"))
-		JungleMenu = #Menu.RSnipe._param
-
-		Menu.RSnipe:addParam("Targetting", "Targetting mode: ", SCRIPT_PARAM_LIST, 2, { "Near mouse (1000) range from mouse", "Most killable"})
-		
-		Menu.RSnipe:addSubMenu("Alerter", "Alerter")
-			Menu.RSnipe.Alerter:addParam("Alert", "Draw \"Snipe\" on killable enemies", SCRIPT_PARAM_ONOFF , true)
-			Menu.RSnipe.Alerter:addParam("Ping", "Ping if an enemy is killable", SCRIPT_PARAM_ONOFF , true)
-
-		Menu.RSnipe:addSubMenu("Advanced", "Advanced")
-			Menu.RSnipe.Advanced:addParam("Delay0", "Delay between 0-1", SCRIPT_PARAM_SLICE, 0, 0, 3000)
-			Menu.RSnipe.Advanced:addParam("Delay1", "Delay between 1-2", SCRIPT_PARAM_SLICE, 0, 0, 3000)
-			Menu.RSnipe.Advanced:addParam("Delay2", "Delay between 2-3", SCRIPT_PARAM_SLICE, 0, 0, 3000)
-			Menu.RSnipe.Advanced:addParam("Delay",  "Wait before changing target", SCRIPT_PARAM_SLICE, 1000, 0, 3000)
-			Menu.RSnipe.Advanced:addParam("Packets", "Use Packets", SCRIPT_PARAM_ONOFF , true)
-			Menu.RSnipe.Advanced:addParam("Dead", "Avoid shoting on people about to die", SCRIPT_PARAM_ONOFF , true)
-
-	Menu:addSubMenu("Lane Clear", "Farm")
-		Menu.Farm:addParam("UseQ",  "Use Q", SCRIPT_PARAM_ONOFF, true)
-		Menu.Farm:addParam("UseW",  "Use W", SCRIPT_PARAM_ONOFF, false)
-		Menu.Farm:addParam("ManaCheck", "Don't farm if mana < %", SCRIPT_PARAM_SLICE, 10, 0, 100)
-		Menu.Farm:addParam("Enabled", "Farm!", SCRIPT_PARAM_ONKEYDOWN, false,   string.byte("V"))
-	
-	Menu:addSubMenu("Jungle Clear", "JungleFarm")
-		Menu.JungleFarm:addParam("UseQ", "Use Q", SCRIPT_PARAM_ONOFF, true)
-		Menu.JungleFarm:addParam("UseW", "Use W", SCRIPT_PARAM_ONOFF, true)
-		Menu.JungleFarm:addParam("Enabled", "Farm jungle!", SCRIPT_PARAM_ONKEYDOWN, false,   string.byte("V"))
-
-	Menu:addSubMenu("Misc", "Misc")
-		Menu.Misc:addParam("skinList", "Choose your skin", SCRIPT_PARAM_LIST, 4, { "Runeborn", "Battlecast", "Scorched Earth", "Classic" })
-		Menu.Misc:addParam("WCenter", "Cast W centered", SCRIPT_PARAM_ONOFF, false)
-		Menu.Misc:addParam("WMR", "Cast W at max range", SCRIPT_PARAM_ONOFF, false)
-		Menu.Misc:addParam("AutoEDashing", "Auto E on dashing enemies", SCRIPT_PARAM_ONOFF, true)
-		Menu.Misc:addParam("AutoEImmobile", "Auto E on immobile enemies", SCRIPT_PARAM_ONOFF, true)
-		Menu.Misc:addSubMenu("Anti-Gapclosers", "AG")
-			AntiGapcloser(Menu.Misc.AG, OnTargetGapclosing)
-		Menu.Misc:addSubMenu("Auto-Interrupter", "AI")
-			Interrupter(Menu.Misc.AI, OnTargetInterruptable)
-			
-	Menu:addSubMenu("Drawing", "Drawing")
-	 	Menu.Drawing:addParam("mDraw", "Disable All Range Draws", SCRIPT_PARAM_ONOFF, false)
-		Menu.Drawing:addParam("Target", "Draw Circle on Target", SCRIPT_PARAM_ONOFF, true)
-		Menu.Drawing:addParam("Text", "Draw Text on Target", SCRIPT_PARAM_ONOFF, true)
-		Menu.Drawing:addParam("myHero", "Draw My Range", SCRIPT_PARAM_ONOFF, true)
-		Menu.Drawing:addParam("myColor", "Draw My Range Color", SCRIPT_PARAM_COLOR, {255, 255, 255, 255})
-		Menu.Drawing:addParam("qDraw", "Draw (Q) Range", SCRIPT_PARAM_ONOFF, true)
-		Menu.Drawing:addParam("qColor", "Draw (Q) Color", SCRIPT_PARAM_COLOR, {255, 255, 255, 255})
-		Menu.Drawing:addParam("wDraw", "Draw (W) Range", SCRIPT_PARAM_ONOFF, true)
-		Menu.Drawing:addParam("wColor", "Draw (W) Color", SCRIPT_PARAM_COLOR, {255, 255, 255, 255})
-		Menu.Drawing:addParam("eDraw", "Draw (E) Range", SCRIPT_PARAM_ONOFF, true)
-		Menu.Drawing:addParam("eColor", "Draw (E) Color", SCRIPT_PARAM_COLOR, {255, 255, 255, 255})
-		Menu.Drawing:addParam("rDraw", "Draw (R) Range", SCRIPT_PARAM_ONOFF, true)
-		Menu.Drawing:addParam("rColor", "Draw (R) Color", SCRIPT_PARAM_COLOR, {255, 255, 255, 255})
-		Menu.Drawing:addParam("rMinimap", "Draw (R) Range on Minimap", SCRIPT_PARAM_ONOFF, true)
-		Menu.Drawing:addParam("rMColor", "Draw (R) Minimap Color", SCRIPT_PARAM_COLOR, {255, 255, 255, 255})
-
-		Menu.Drawing:addSubMenu("Lag Free Circles", "lfc")	
-			Menu.Drawing.lfc:addParam("lfc", "Lag Free Circles", SCRIPT_PARAM_ONOFF, false)
-			Menu.Drawing.lfc:addParam("CL", "Quality", 4, 75, 75, 2000, 0)
-			Menu.Drawing.lfc:addParam("Width", "Width", 4, 1, 1, 10, 0)
-			
-	DLib:AddToMenu(Menu.Drawing, MainCombo)
-
-	Menu:addParam("Version", "Version", SCRIPT_PARAM_INFO, version)
-	
-	EnemyMinions  = minionManager(MINION_ENEMY, Ranges[_Q][2], myHero, MINION_SORT_MAXHEALTH_DEC)
-	JungleMinions = minionManager(MINION_JUNGLE, Ranges[_Q][2], myHero, MINION_SORT_MAXHEALTH_DEC)
-end
-
-function OnTargetGapclosing(unit, spell)
-	if (myHero:CanUseSpell(_E) == READY) and GetDistance(unit) <= Ranges[_E] then
-		E:Cast(unit)
-	end
-end
-
-function OnTargetInterruptable(unit, spell)
-	if (myHero:CanUseSpell(_E) == READY) and GetDistance(unit) <= Ranges[_E] then
-		E:Cast(unit)
-	end
-end
-
-function SetQRange()
-	if Q and RangeCircles[_Q] then
-		RangeCircles[_Q].radius = Q.range == Ranges[_Q][1] and Ranges[_Q][2] or Q.range
-	end
-end
-TickLimiter(SetQRange, 120)
-
-function Cast1Q(to)
-	IsCastingQ = true
-	local p = CLoLPacket(0xDE) 
-	p.vTable = 18253492  
-    p:EncodeF(myHero.networkID)  
-    p:EncodeF(to.x)  
-    p:EncodeF(to.z)  
-    p:EncodeF(to.x)  
-    p:EncodeF(to.z)  
-    p:EncodeF(0)     
-    p:Encode1(SPELL_1)  
-    p.dwArg1 = 1  
-    p.dwArg2 = 0 
-    SendPacket(p)
-	IsCastingQ = false
-end
-
-function Cast2Q(to)
-	IsCastingQ = true
-	local p = CLoLPacket(0x103) 
-	p.vTable = 18806728
-    p:EncodeF(myHero.networkID)
-    p:Encode1(SPELL_1)
-    p:EncodeF(to.x)
-    p:EncodeF(to.y)
-    p:EncodeF(to.z)
-    p:Encode1(2)
-    p.dwArg1 = 1
-    p.dwArg2 = 0
-	p:Hide()
-    SendPacket(p)
-	IsCastingQ = false
-end
-
-function SetRRange()
-	if R then
-		if myHero:GetSpellData(_R).level == 1 then
-			R:SetRange(3200)
-		elseif myHero:GetSpellData(_R).level == 2 then
-			R:SetRange(4400)
-		elseif myHero:GetSpellData(_R).level == 3 then
-			R:SetRange(5600)
-		end
-	end
-end
-TickLimiter(SetRRange, 1)
-
-function GetRCombo()
-	return {_R , _R, _R}
-end
-
-function OnGainBuff(unit, buff) 
-	if unit.isMe and buff.name == "xerathascended2onhit" then
-		PassiveUp = true
-	end
-end
-
-function OnLoseBuff(unit, buff)
-	if unit.isMe then
-		if buff.name == "xerathascended2onhit" then
-			PassiveUp = false
-		end
-		if buff.name == "xerathrshots" then
-			RStartTime = 0
-		end
-	end
+function OnCreateObj(obj)
+        if obj.name:lower():find("yomu_ring_green") then
+                BallPos = obj
+                BallMoving = false
+        end
+        if (obj.name:lower():find("orianna_ball_flash_reverse")) then
+            BallPos = myHero
+BallMoving = false
+        end
 end
 
 function OnProcessSpell(unit, spell)
-	if unit.isMe then
-		if spell.name == "xeratharcanopulse2" then
-			Q:_AbortCharge()
-		end
-	end
+if unit.isMe and spell.name:lower():find("orianaizunacommand") then
+BallMoving = true
+DelayAction(function(p) BallPos = Vector(p) end, GetDistance(spell.endPos, BallPos) / BallSpeed - GetLatency()/1000 - 0.35, {Vector(spell.endPos)})
 end
 
-function OnTick()
-	if Menu.RSnipe._param[AllMenu].key == Menu.RSnipe._param[JungleMenu].key then
-		Menu.RSnipe._param[AllMenu].key    = 82
-		Menu.RSnipe._param[JungleMenu].key = 74
-		Menu.RSnipe.AutoR = false
-		Menu.RSnipe.JS    = false
-		Menu.RSnipe:save()
-		print("Xerath: Key binding issue found, RSnipe keys resetted")
-	end
-
-	if Menu.RSnipe.AutoR then
-		RPressTime = os.clock()
-		JSPressTime = 0
-	end
-
-	if Menu.RSnipe.JS then
-		JSPressTime = os.clock()
-	end
-
-	if ImCastingR() then
-		HandleRCast()
-		do return end
-	end
-	
-	if Menu.Combo.CastE then
-		local ETarget = STS:GetTarget(Ranges[_E])
-		if ETarget then
-			E:Cast(ETarget)
-		end
-	end
-
-	if Menu.Combo.Enabled then
-		Combo()
-	elseif Menu.Harass.Enabled and ((myHero.mana / myHero.maxMana * 100) >= Menu.Harass.ManaCheck or Q:IsCharging()) then
-		Harass()
-	end
-
-	if Menu.Farm.Enabled and ((myHero.mana / myHero.maxMana * 100) >= Menu.Farm.ManaCheck or Q:IsCharging()) then
-		Farm()
-	end
-
-	if Menu.JungleFarm.Enabled then
-		JungleFarm()
-	end
-
-	if Menu.Misc.AutoEDashing then
-		for i, target in ipairs(SelectUnits(GetEnemyHeroes(), function(t) return ValidTarget(t, Ranges[_E] * 1.5) end)) do
-			E:CastIfDashing(target)
-		end
-	end
-
-	if Menu.Misc.AutoEImmobile then
-		for i, target in ipairs(SelectUnits(GetEnemyHeroes(), function(t) return ValidTarget(t, Ranges[_E] * 1.5) end)) do
-			E:CastIfImmobile(target)
-		end
-	end
-
-	if Menu.RSnipe.Alerter.Ping and myHero:CanUseSpell(_R) == READY and (os.clock() - LastPing > 30) then
-		for i, enemy in ipairs(GetEnemyHeroes()) do
-			if ValidTarget(enemy, R.range) and DLib:IsKillable(enemy, GetRCombo()) then
-				for i = 1, 3 do
-					DelayAction(PingClient,  1000 * 0.3 * i/1000, {enemy.x, enemy.z})
-				end
-				LastPing = os.clock()
-			end
-		end
-	end
-	
-	AutoIgnite()
-	if Menu.Misc.skinList and _G.UseSkinHack then ChooseSkin() end
-	if Menu.Drawing.lfc.lfc then _G.DrawCircle = DrawCircle2 else _G.DrawCircle = _G.oldDrawCircle end
+if unit.isMe and spell.name:lower():find("orianaredactcommand") then
+BallMoving = true
+BallPos = spell.target
 end
 
-function Combo()
-	local QTarget = STS:GetTarget(Ranges[_Q][2])
-	local WTarget = STS:GetTarget(Ranges[_W] + Widths[_W])
-	local ETarget = STS:GetTarget(Menu.Combo.Erange)
-
-	if QTarget and Menu.Combo.UseQ then
-		if Q:IsCharging() then
-			local castPosition, hitChance, nTargets = Q:GetPrediction(QTarget)
-			if Q.range ~= Ranges[_Q][2] and GetDistanceSqr(castPosition) < (Q.range - 200)^2 or Q.range == Ranges[_Q][2] and GetDistanceSqr(castPosition) < (Q.range)^2 then
-				Cast2Q(castPosition)
-			end
-		else
-			Q:Charge()
-		end
-	end
-
-	if WTarget and Menu.Combo.UseW then
-		if Menu.Misc.WCenter then
-			W.width = 50
-		else
-			W.width = Widths[_W]
-		end
-		VP.ShotAtMaxRange = Menu.Misc.WMR
-		W:Cast(WTarget)
-		VP.ShotAtMaxRange = false
-	end
-
-	if ETarget and Menu.Combo.UseE then
-		E:Cast(ETarget)
-	end
+if unit.type == "obj_AI_Hero" then
+LastChampionSpell[unit.networkID] = {name = spell.name, time=os.clock()}
+end
 end
 
-function Harass()
-	local QTarget = STS:GetTarget(Ranges[_Q][2])
-	if QTarget and Menu.Harass.UseQ then
-		if Q:IsCharging() then
-			local castPosition, hitChance, nTargets = Q:GetPrediction(QTarget)
-			if Q.range ~= Ranges[_Q][2] and GetDistanceSqr(castPosition) < (Q.range - 200)^2 or Q.range == Ranges[_Q][2] and GetDistanceSqr(castPosition) < (Q.range)^2 then
-				Cast2Q(castPosition)
-			end
-		else
-			Q:Charge()
-		end
-	end
+function OnGainBuff(unit, buff)
+if unit.team == myHero.team and buff.name:lower():find("orianaghostself") then
+BallMoving = false
+BallPos = unit
+end
 end
 
-function Farm()
-	EnemyMinions:update()
-	if Menu.Farm.UseQ then
-		if not Q:IsCharging() then
-			if #EnemyMinions.objects > 1 then
-				Q:Charge()
-			end
-		else
-			local AllMinions = SelectUnits(EnemyMinions.objects, function(t) return ValidTarget(t) and GetDistanceSqr(t) < Q.rangeSqr end)
-			local AllMinions2 = SelectUnits(EnemyMinions.objects, function(t) return ValidTarget(t) and GetDistanceSqr(t) < Ranges[_Q][2] * Ranges[_Q][2] end)
-
-			if #AllMinions == #AllMinions2 or Q.range == Ranges[_Q][2] then
-				AllMinions = GetPredictedPositionsTable(VP, AllMinions, Delays[_Q], Widths[_Q], Q.range, math.huge, myHero, false)
-				local BestPos1, BestHit1 = GetBestLineFarmPosition(Q.range, Widths[_Q], AllMinions)
-				if BestPos1 then
-					Cast2Q(BestPos1)
-				end
-			end
-			
-		end
-	end
-
-	if Menu.Farm.UseW then
-		local CasterMinions = SelectUnits(EnemyMinions.objects, function(t) return (t.charName:lower():find("wizard") or t.charName:lower():find("caster")) and ValidTarget(t) and GetDistanceSqr(t) < W.rangeSqr end)
-		
-		CasterMinions = GetPredictedPositionsTable(VP, CasterMinions, Delays[_W], Widths[_W], Ranges[_W] + Widths[_W], math.huge, myHero, false)
-		local BestPos1, BestHit1 = GetBestCircularFarmPosition(Ranges[_W] + Widths[_W], Widths[_W], CasterMinions)
-
-		if BestPos1 and BestHit1 > 1 then
-			CastSpell(_W, BestPos1.x, BestPos1.z)
-		else
-			local AllMinions = SelectUnits(EnemyMinions.objects, function(t) return ValidTarget(t) and GetDistanceSqr(t) < E.rangeSqr end)
-			AllMinions = GetPredictedPositionsTable(VP, AllMinions, Delays[_W], Widths[_W], Ranges[_W] + Widths[_W], math.huge, myHero, false)
-			BestPos1, BestHit1 = GetBestCircularFarmPosition(Ranges[_W] + Widths[_W], Widths[_W], AllMinions)
-			if BestPos1 and BestHit1 > 1 then
-				CastSpell(_W, BestPos1.x, BestPos1.z)
-			end
-		end
-	end
+function OnLoad()
+Menu = scriptConfig("Orianna", "Orianna")
+VP = VPrediction()
+Menu:addSubMenu("Orbwalking", "Orbwalking")
+SxOrb:LoadToMenu(Menu.Orbwalking)
+Menu:addSubMenu("Combo", "Combo")
+Menu.Combo:addParam("UseQ", "Use Q", SCRIPT_PARAM_ONOFF , true)
+Menu.Combo:addParam("UseW", "Use W", SCRIPT_PARAM_ONOFF, true)
+Menu.Combo:addParam("UseE", "Use E", SCRIPT_PARAM_ONOFF, true)
+Menu.Combo:addParam("UseR", "Use R", SCRIPT_PARAM_ONOFF, true)
+Menu.Combo:addParam("UseRN", "Use R at least in", SCRIPT_PARAM_LIST, 1, { "1 target", "2 targets", "3 targets", "4 targets" , "5 targets"})
+Menu.Combo:addParam("UseI", "Use Ignite if enemy is killable", SCRIPT_PARAM_ONOFF, true)
+Menu.Combo:addParam("Enabled", "Normal combo", SCRIPT_PARAM_ONKEYDOWN, false, 32)
+Menu:addSubMenu("Misc", "Misc")
+Menu.Misc:addParam("UseW", "Auto-W if it will hit", SCRIPT_PARAM_LIST, 1, { "No", ">0 targets", ">1 targets", ">2 targets", ">3 targets", ">4 targets" })
+Menu.Misc:addParam("UseR", "Auto-ultimate if it will hit", SCRIPT_PARAM_LIST, 1, { "No", ">0 targets", ">1 targets", ">2 targets", ">3 targets", ">4 targets" })
+Menu.Misc:addParam("EQ", "Use E + Q if tEQ < %x * tQ", SCRIPT_PARAM_SLICE, 100, 0, 200)
+Menu.Misc:addSubMenu("Auto-E on initiators", "AutoEInitiate")
+local added = false
+for champion, spell in pairs(InitiatorsList) do
+for i, ally in ipairs(GetAllyHeroes()) do
+if ally.charName == champion then
+added = true
+Menu.Misc.AutoEInitiate:addParam(champion..spell, champion.." ("..spell..")", SCRIPT_PARAM_ONOFF, true)
+end
+end
 end
 
-function JungleFarm()
-	JungleMinions:update()
-	if JungleMinions.objects[1] ~= nil then
-		if Menu.JungleFarm.UseQ and GetDistance(JungleMinions.objects[1]) <= Ranges[_Q][1] and myHero:CanUseSpell(_Q) == READY then
-			CastSpell(_Q, JungleMinions.objects[1].x, JungleMinions.objects[1].z)
-			Cast2Q(JungleMinions.objects[1])
-		end
+if not added then
+Menu.Misc.AutoEInitiate:addParam("info", "Info", SCRIPT_PARAM_INFO, "No supported initiators found")
+else
+Menu.Misc.AutoEInitiate:addParam("Active", "Active", SCRIPT_PARAM_ONOFF, true)
+end
+Menu.Misc:addParam("Interrupt", "Auto interrupt important spells", SCRIPT_PARAM_ONOFF, true)
+Menu.Misc:addParam("BlockR", "Block R if it is not going to hit", SCRIPT_PARAM_ONOFF, true)
+Menu:addSubMenu("Harass", "Harass")
+Menu.Harass:addParam("UseQ", "Use Q", SCRIPT_PARAM_ONOFF , true)
+Menu.Harass:addParam("UseW", "Use W", SCRIPT_PARAM_ONOFF, false)
+Menu.Harass:addParam("ManaCheck", "Don't harass if mana < %", SCRIPT_PARAM_SLICE, 0, 0, 100)
+Menu.Harass:addParam("Enabled", "Harass!", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
+Menu.Harass:addParam("Enabled2", "Harass (TOGGLE)!", SCRIPT_PARAM_ONKEYTOGGLE, false, string.byte("L"))
+Menu:addSubMenu("Farm", "Farm")
+Menu.Farm:addParam("UseQ", "Use Q", SCRIPT_PARAM_LIST, 4, { "No", "Freezing", "LaneClear", "Both" })
+Menu.Farm:addParam("UseW", "Use W", SCRIPT_PARAM_LIST, 3, { "No", "Freezing", "LaneClear", "Both" })
+Menu.Farm:addParam("UseE", "Use E", SCRIPT_PARAM_LIST, 3, { "No", "Freezing", "LaneClear", "Both" })
+Menu.Farm:addParam("ManaCheck", "Don't laneclear if mana < %", SCRIPT_PARAM_SLICE, 0, 0, 100)
+Menu.Farm:addParam("Freeze", "Farm Freezing", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
+Menu.Farm:addParam("LaneClear", "Farm LaneClear", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("V"))
+Menu:addSubMenu("JungleFarm", "JungleFarm")
+Menu.JungleFarm:addParam("UseQ", "Use Q", SCRIPT_PARAM_ONOFF, true)
+Menu.JungleFarm:addParam("UseW", "Use W", SCRIPT_PARAM_ONOFF, true)
+Menu.JungleFarm:addParam("UseE", "Use E", SCRIPT_PARAM_ONOFF, true)
+Menu.JungleFarm:addParam("Enabled", "Farm jungle!", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("V"))
+Menu:addSubMenu("Drawing", "Drawing")
+Menu.Drawing:addParam("AArange", "Draw AA range", SCRIPT_PARAM_ONOFF, true)
+Menu.Drawing:addParam("Qrange", "Draw Q range", SCRIPT_PARAM_ONOFF, true)
+Menu.Drawing:addParam("Wrange", "Draw W radius", SCRIPT_PARAM_ONOFF, false)
+Menu.Drawing:addParam("Rrange", "Draw R radius", SCRIPT_PARAM_ONOFF, false)
+Menu.Drawing:addParam("DrawDamage", "Draw damage after combo in healthbars", SCRIPT_PARAM_ONOFF, true)
+Menu.Drawing:addParam("DrawBall", "Draw ball position", SCRIPT_PARAM_ONOFF, true)
+Menu:addParam("Version", "Version", SCRIPT_PARAM_INFO, version)
+EnemyMinions = minionManager(MINION_ENEMY, Qrange, myHero, MINION_SORT_MAXHEALTH_DEC)
+JungleMinions = minionManager(MINION_JUNGLE, Qrange, myHero, MINION_SORT_MAXHEALTH_DEC)
 
-		if Menu.JungleFarm.UseW and myHero:CanUseSpell(_W) == READY then
-			CastSpell(_W, JungleMinions.objects[1].x, JungleMinions.objects[1].z)		
-		end
-	end
+  if myHero:GetSpellData(SUMMONER_1).name:find("SummonerDot") then
+_IGNITE = SUMMONER_1
+elseif myHero:GetSpellData(SUMMONER_2).name:find("SummonerDot") then
+_IGNITE = SUMMONER_2
+else
+_IGNITE = nil
+end
 end
 
-function OnSendPacket(p)
-    if p.header == Packet.headers.S_MOVE and ImCastingR() then
-		p:Block()
-	elseif (p.header == 0xDE) then
-		p.pos = 26
-		local spellId = p:Decode1()
-		if (spellId == 0 and not IsCastingQ) then
-		end
-	elseif (p.header == 0x103) then
-		local QTarget = STS:GetTarget(Ranges[_Q][2])
-		if (not IsCastingQ and QTarget) then
-			p:Block()
-			local castPosition, hitChance, nTargets = Q:GetPrediction(QTarget)
-			if Q.range ~= Ranges[_Q][2] and GetDistanceSqr(castPosition) < (Q.range - 200)^2 or Q.range == Ranges[_Q][2] and GetDistanceSqr(castPosition) < (Q.range)^2 then
-				Cast2Q(castPosition)
-			end
-		end
-	end
+function GetComboDamage(Combo, Unit)
+local totaldamage = 0
+for i, spell in ipairs(Combo) do
+totaldamage = totaldamage + GetDamage(spell, Unit)
+end
+return totaldamage
 end
 
-function OnDraw()
-	if not myHero.dead and not Menu.Drawing.mDraw then
-		if myHero:CanUseSpell(_Q) == READY and Menu.Drawing.qDraw then 
-			DrawCircle(myHero.x, myHero.y, myHero.z, Q.range, RGB(Menu.Drawing.qColor[2], Menu.Drawing.qColor[3], Menu.Drawing.qColor[4]))
-		end
-		if myHero:CanUseSpell(_W) == READY and Menu.Drawing.wDraw then 
-			DrawCircle(myHero.x, myHero.y, myHero.z, W.range, RGB(Menu.Drawing.wColor[2], Menu.Drawing.wColor[3], Menu.Drawing.wColor[4]))
-		end
-		if myHero:CanUseSpell(_E) == READY and Menu.Drawing.eDraw then 
-			DrawCircle(myHero.x, myHero.y, myHero.z, E.range, RGB(Menu.Drawing.eColor[2], Menu.Drawing.eColor[3], Menu.Drawing.eColor[4]))
-		end
-		if myHero:CanUseSpell(_R) == READY and Menu.Drawing.rDraw then 
-			DrawCircle(myHero.x, myHero.y, myHero.z, R.range, RGB(Menu.Drawing.rColor[2], Menu.Drawing.rColor[3], Menu.Drawing.rColor[4]))
-		elseif Menu.Drawing.rMinimap then
-			DrawCircleMinimap(myHero.x, myHero.y, myHero.z, R.range, 1, RGB(Menu.Drawing.rMColor[2], Menu.Drawing.rMColor[3], Menu.Drawing.rMColor[4]), 100)
-		end
-		
-		if Menu.Drawing.myHero then
-			DrawCircle(myHero.x, myHero.y, myHero.z, TrueRange(), RGB(Menu.Drawing.myColor[2], Menu.Drawing.myColor[3], Menu.Drawing.myColor[4]))
-		end
-		
-		if Menu.Drawing.Target and Target ~= nil then
-			DrawCircle(Target.x, Target.y, Target.z, 80, ARGB(255, 10, 255, 10))
-		end
-		
-		if Menu.RSnipe.Alerter.Alert and myHero:GetSpellData(_R).level > 0 and myHero:CanUseSpell(_R) == READY then
-			for i, enemy in ipairs(GetEnemyHeroes()) do
-				if ValidTarget(enemy, R.range) and DLib:IsKillable(enemy, GetRCombo()) then
-					local pos = WorldToScreen(D3DXVECTOR3(enemy.x, enemy.y, enemy.z))
-					DrawText("Snipe!", 17, pos.x, pos.y, ARGB(255,0,255,0))
-				end
-			end
-		end 
-	end
+function GetDamage(Spell, Unit)
+local truedamage = 0
+if Spell == _Q and myHero:GetSpellData(_Q).level ~= 0 then
+truedamage = myHero:CalcMagicDamage(Unit, Qdamage[myHero:GetSpellData(_Q).level] + myHero.ap * Qscaling)
+elseif Spell == _W and myHero:GetSpellData(_W).level ~= 0 and WREADY then
+truedamage = myHero:CalcMagicDamage(Unit, Wdamage[myHero:GetSpellData(_W).level] + myHero.ap * Wscaling)
+elseif Spell == _E and myHero:GetSpellData(_E).level ~= 0 then
+truedamage = myHero:CalcMagicDamage(Unit, Edamage[myHero:GetSpellData(_E).level] + myHero.ap * Escaling)
+elseif Spell == _R and myHero:GetSpellData(_R).level ~= 0 and RREADY then
+truedamage = myHero:CalcMagicDamage(Unit, Rdamage[myHero:GetSpellData(_R).level] + myHero.ap * Rscaling)
+elseif Spell == _AA and myHero:GetSpellData(_AA).level ~= 0 then
+truedamage = myHero:CalcDamage(Unit, myHero.totalDamage) + myHero:CalcMagicDamage(Unit, AAdamage[myHero.level] + myHero.ap * AAscaling)
+elseif Spell == _IGNITE and _IGNITE and IGNITEREADY then
+truedamage = 50 + 20 * myHero.level
+end
+return truedamage
+end
+
+function CheckEnemiesHitByW()
+local enemieshit = {}
+for i, enemy in ipairs(GetEnemyHeroes()) do
+local position = VP:GetPredictedPos(enemy, Wdelay)
+if ValidTarget(enemy) and GetDistance(position, BallPos) <= Wradius and GetDistance(enemy.visionPos, BallPos) <= Wradius then
+table.insert(enemieshit, enemy)
+end
+end
+return #enemieshit, enemieshit
+end
+
+function CheckEnemiesHitByE(To)
+local enemieshit = {}
+local StartPoint = Vector(BallPos.x, 0, BallPos.z)
+local EndPoint = Vector(To.x, 0, To.z)
+for i, enemy in ipairs(GetEnemyHeroes()) do
+local cp, hc, position = VP:GetLineCastPosition(enemy, Edelay, Eradius, math.huge, BallSpeedE, StartPoint)
+if position then
+local PointInLine, tmp, isOnSegment = VectorPointProjectionOnLineSegment(StartPoint, EndPoint, position)
+if ValidTarget(enemy) and isOnSegment and GetDistance(PointInLine, position) <= (Eradius + VP:GetHitBox(enemy)) and GetDistance(PointInLine, enemy.visionPos) < (Eradius) * 2 + 30 then
+table.insert(enemieshit, enemy)
+end
+end
+end
+return #enemieshit, enemieshit
+end
+
+function CheckEnemiesHitByR()
+local enemieshit = {}
+for i, enemy in ipairs(GetEnemyHeroes()) do
+local position = VP:GetPredictedPos(enemy, Rdelay)
+if ValidTarget(enemy) and GetDistance(position, BallPos) <= Rradius and GetDistance(enemy.visionPos, BallPos) <= 1.25 * Rradius then
+table.insert(enemieshit, enemy)
+end
+end
+return #enemieshit, enemieshit
+end
+
+function CastQ(target, fast)
+local Speed = BallSpeed * 1.5
+local CastPosition, HitChance, Position = VP:GetLineCastPosition(target, Qdelay, Qradius, math.huge, Speed, BallPos)
+local CastPoint = CastPosition
+
+if (HitChance < 2) then return end
+
+if GetDistance(myHero.visionPos, Position) > Qrange + Wradius + VP:GetHitBox(target) then
+target2 = GetBestTarget(Qrange, target)
+if target2 then
+CastPosition, HitChance, Position = VP:GetLineCastPosition(target2, Qdelay, Qradius, math.huge, Speed, BallPos)
+CastPoint = CastPosition
+else
+do return end
+end
+end
+
+if GetDistance(myHero.visionPos, Position) > (Qrange + Wradius + VP:GetHitBox(target)) then
+do return end
+end
+
+if EREADY and Menu.Misc.EQ ~= 0 then
+local TravelTime = GetDistance(BallPos, CastPoint) / BallSpeed
+local MinTravelTime = GetDistance(myHero, CastPoint) / BallSpeed + GetDistance(myHero, BallPos) / BallSpeedE
+local Etarget = myHero
+
+for i, ally in ipairs(GetAllyHeroes()) do
+if ValidTarget(ally, Erange, false) then
+local t = GetDistance(ally, CastPoint) / BallSpeed + GetDistance(ally, BallPos) / BallSpeedE
+if t < MinTravelTime then
+MinTravelTime = t
+Etarget = ally
+end
+end
+end
+
+if MinTravelTime < (Menu.Misc.EQ / 100) * TravelTime and (not Etarget.isMe or GetDistance(BallPos, myHero) > 100) and GetDistance(Etarget) < GetDistance(CastPoint) then
+CastE(Etarget)
+do return end
+end
+end
+if GetDistanceSqr(myHero.visionPos, CastPoint) < Qrange * Qrange then
+CastSpell(_Q, CastPoint.x, CastPoint.z)
+else
+CastPoint = Vector(myHero.visionPos) + Qrange * (Vector(CastPoint) - Vector(myHero)):normalized()
+CastSpell(_Q, CastPoint.x, CastPoint.z)
+end
+end
+
+function CastW()
+local hitcount, hit = CheckEnemiesHitByW()
+if hitcount >= 1 then
+Packet('S_CAST', {spellId=_W}):send()
+end
+end
+
+function CastE(target)
+if target then
+CastSpell(_E, target)
+end
+end
+
+function CastECH(target, n)
+local hitcount, hit = CheckEnemiesHitByE(target)
+if hitcount >= n then
+CastE(target)
+end
+end
+
+function CastR(target)
+local position = VP:GetPredictedPos(target, Rdelay)
+if GetDistance(position, BallPos) < Rradius and GetDistance(target, BallPos) < Rradius then
+Packet('S_CAST', {spellId = _R}):send()
+end
+end
+
+function GetNMinionsHit(Pos, radius)
+local count = 0
+for i, minion in pairs(EnemyMinions.objects) do
+if GetDistance(minion, Pos) < radius then
+count = count + 1
+end
+end
+return count
+end
+
+function GetNMinionsHitE(Pos)
+local count = 0
+local StartPoint = Vector(Pos.x, 0, Pos.z)
+local EndPoint = Vector(myHero.x, 0, myHero.z)
+for i, minion in pairs(EnemyMinions.objects) do
+local position = Vector(minion.x, 0, minion.z)
+local PointInLine = VectorPointProjectionOnLineSegment(StartPoint, EndPoint, position)
+if GetDistance(PointInLine, position) < Eradius then
+count = count + 1
+end
+end
+return count
+end
+
+function Farm(Mode)
+local UseQ
+local UseW
+local UseE
+if not SxOrb:CanMove() then return end
+
+EnemyMinions:update()
+if Mode == "Freeze" then
+UseQ = Menu.Farm.UseQ == 2
+UseW = Menu.Farm.UseW == 2
+UseE = Menu.Farm.UseE == 2
+elseif Mode == "LaneClear" then
+UseQ = Menu.Farm.UseQ == 3
+UseW = Menu.Farm.UseW == 3
+UseE = Menu.Farm.UseE == 3
+end
+
+UseQ = Menu.Farm.UseQ == 4 or UseQ
+UseW = Menu.Farm.UseW == 4 or UseW
+UseE = Menu.Farm.UseE == 4 or UseE
+
+if UseQ and QREADY then
+if UseW then
+local MaxHit = 0
+local MaxPos = 0
+for i, minion in pairs(EnemyMinions.objects) do
+if GetDistance(minion) <= Qrange then
+local MinionPos = VP:GetPredictedPos(minion, Qdelay, BallSpeed, BallPos)
+local Hit = GetNMinionsHit(minion, Wradius)
+if Hit >= MaxHit then
+MaxHit = Hit
+MaxPos = MinionPos
+end
+end
+end
+if MaxHit > 0 and MaxPos then
+CastSpell(_Q, MaxPos.x, MaxPos.z)
+end
+else
+for i, minion in pairs(EnemyMinions.objects) do
+if minion.health + 15 < GetDamage(_Q, minion) and not SxOrb:InRange(minion) then
+local MinionPos = VP:GetPredictedPos(minion, Qdelay, BallSpeed, BallPos)
+CastSpell(_Q, MinionPos.x, MinionPos.z)
+break
+end
+end
+end
+end
+
+if UseW and WREADY then
+local Hit = GetNMinionsHit(BallPos, Wradius)
+if Hit >= 3 then
+Packet('S_CAST', {spellId=_W}):send()
+end
+end
+
+if UseE and EREADY then
+local Hit = GetNMinionsHitE(BallPos)
+if Hit >= 3 and (not WREADY or not UseW) then
+CastE(myHero)
+end
+end
+end
+
+function FarmJungle()
+JungleMinions:update()
+local UseQ = Menu.JungleFarm.UseQ
+local UseW = Menu.JungleFarm.UseW
+local UseE = Menu.JungleFarm.UseE
+
+local Minion = JungleMinions.objects[1] and JungleMinions.objects[1] or nil
+
+if Minion then
+local Position = VP:GetPredictedPos(Minion, Qdelay, BallSpeed, BallPos)
+if UseQ and QREADY then
+CastSpell(_Q, Position.x, Position.z)
+end
+
+if UseW and WREADY and GetDistance(BallPos, Minion) < Wradius then
+Packet('S_CAST', {spellId=_W}):send()
+end
+
+if UseE and (not WREADY or not UseW) and EREADY and GetDistance(Minion) < 700 then
+local starget = myHero
+local dist = GetDistanceSqr(Minion)
+for i, ally in ipairs(GetAllyHeroes()) do
+local dist2 = GetDistanceSqr(ally, Minion)
+if ValidTarget(ally, Erange, false) and dist2 < dist then
+dist = dist2
+starget = ally
+end
+end
+CastE(starget)
+end
+end
+end
+
+function FindBestLocationToQ(target)
+local points = {}
+local targets = {}
+
+local CastPosition, HitChance, Position = VP:GetLineCastPosition(target, Qdelay, Qradius, Qrange, BallSpeed, BallPos)
+table.insert(points, Position)
+table.insert(targets, target)
+
+for i, enemy in ipairs(GetEnemyHeroes()) do
+if ValidTarget(enemy, Qrange + Rradius) and enemy.networkID ~= target.networkID then
+CastPosition, HitChance, Position = VP:GetLineCastPosition(enemy, Qdelay, Qradius, Qrange, BallSpeed, BallPos)
+table.insert(points, Position)
+table.insert(targets, enemy)
+end
+end
+
+
+for o = 1, 5 do
+local MECa = MEC(points)
+local Circle = MECa:Compute()
+
+if Circle.radius <= Rradius and #points >= 3 and RREADY then
+return Circle.center, 3
+end
+
+if Circle.radius <= Wradius and #points >= 2 and WREADY then
+return Circle.center, 2
+end
+
+if #points == 1 then
+return Circle.center, 1
+elseif Circle.radius <= (Qradius + 50) and #points >= 1 then
+return Circle.center, 2
+end
+
+local Dist = -1
+local MyPoint = points[1]
+local index = 0
+
+for i=2, #points, 1 do
+if GetDistance(points[i], MyPoint) >= Dist then
+Dist = GetDistance(points[i], MyPoint)
+index = i
+end
+end
+if index > 0 then
+table.remove(points, index)
+end
+end
+end
+
+function GetBestTarget(Range, Ignore)
+local LessToKill = 100
+local LessToKilli = 0
+local target = nil
+
+for i, enemy in ipairs(GetEnemyHeroes()) do
+if ValidTarget(enemy, Range) then
+DamageToHero = myHero:CalcMagicDamage(enemy, 200)
+ToKill = enemy.health / DamageToHero
+if ((ToKill < LessToKill) or (LessToKilli == 0)) and (Ignore == nil or (Ignore.networkID ~= enemy.networkID)) then
+LessToKill = ToKill
+LessToKilli = i
+target = enemy
+end
+end
+end
+
+if SelectedTarget ~= nil and ValidTarget(SelectedTarget, Range) and (Ignore == nil or (Ignore.networkID ~= SelectedTarget.networkID)) then
+target = SelectedTarget
+end
+
+return target
+end
+
+function OnTickChecks()
+QREADY = (myHero:CanUseSpell(_Q) == READY) or ((myHero:GetSpellData(_Q).currentCd < 1) and (myHero:GetSpellData(_Q).level > 0))
+WREADY = (myHero:CanUseSpell(_W) == READY) or ((myHero:GetSpellData(_W).currentCd < 1) and (myHero:GetSpellData(_W).level > 0))
+EREADY = (myHero:CanUseSpell(_E) == READY) or ((myHero:GetSpellData(_E).currentCd < 1) and (myHero:GetSpellData(_E).level > 0))
+RREADY = (myHero:CanUseSpell(_R) == READY) or ((myHero:GetSpellData(_R).currentCd < 1) and (myHero:GetSpellData(_R).level > 0))
+
+IGNITEREADY = _IGNITE and myHero:CanUseSpell(_IGNITE) == READY or false
+
+if CountEnemyHeroInRange(Qrange + Rradius, myHero) == 1 then
+ComboMode = _ST
+else
+ComboMode = _TF
+end
+
+RefreshKillableTexts()
+
+if Menu.Misc.UseW > 1 and WREADY then
+local hitcount, hit = CheckEnemiesHitByW()
+if hitcount >= (Menu.Misc.UseW -1) then
+Packet('S_CAST', {spellId=_W}):send()
+end	
+end
+
+if Menu.Misc.UseR > 1 and RREADY then
+local hitcount, hit = CheckEnemiesHitByR()
+if (hitcount >= (Menu.Misc.UseR - 1)) and GetDistanceToClosestAlly(BallPos) < Qrange * Far then
+Packet('S_CAST', {spellId = _R}):send()
+end	
+end
+
+if Menu.Misc.AutoEInitiate.Active and EREADY then
+for i, unit in ipairs(GetAllyHeroes()) do
+if GetDistance(unit) < Erange then
+for champion, spell in pairs(InitiatorsList) do
+if LastChampionSpell[unit.networkID] and LastChampionSpell[unit.networkID].name ~=nil and Menu.Misc.AutoEInitiate[champion.. LastChampionSpell[unit.networkID].name] and (os.clock() - LastChampionSpell[unit.networkID].time < 1.5) then
+CastE(unit)
+end
+end
+end
+end
+end
+
+if Menu.Misc.Interrupt then
+for i, unit in ipairs(GetEnemyHeroes()) do
+for champion, spell in pairs(InterruptList) do
+if GetDistance(unit) <= Qrange and LastChampionSpell[unit.networkID] and spell == LastChampionSpell[unit.networkID].name and (os.clock() - LastChampionSpell[unit.networkID].time < 1) then
+CastSpell(_Q, unit.x, unit.z)
+if GetDistance(BallPos, unit) < Rradius then
+Packet('S_CAST', {spellId = _R}):send()
+end
+end
+end
+end
+end
 end
 
 function OnWndMsg(Msg, Key)
-	if Msg == 256 and Key == Menu.RSnipe._param[TapMenu].key then
-		RPressTime2 = true
-		RCooldownTime = 0
-	end
+if Msg == WM_LBUTTONDOWN then
+local minD = 0
+local starget = nil
+for i, enemy in ipairs(GetEnemyHeroes()) do
+if ValidTarget(enemy) then
+if GetDistance(enemy, mousePos) <= minD or starget == nil then
+minD = GetDistance(enemy, mousePos)
+starget = enemy
+end
+end
 end
 
-function GenModelPacket(networkId, modelName, skinId)
-  local p = CLoLPacket(0x001A)
-    p.vTable = 19025968
-    p:EncodeF(networkId)
-      for c in modelName:gmatch'.' do
-        p:Encode1(string.byte(c))
-      end
-      for i = #modelName, 15 do 
-        p:Encode1(0)
-       end
-    p:Encode4(0)
-    p:Encode4(0)
-    p:Encode4(0xFF) 
-    p:Encode4(skinId)
-    p:Encode4(0)
-    p:Encode1(0)
-    RecvPacket(p)
+if starget and minD < 100 then
+if SelectedTarget and starget.charName == SelectedTarget.charName then
+SelectedTarget = nil
+else
+SelectedTarget = starget
+print("<font color=\"#FF0000\">Orianna: New target selected: "..starget.charName.."</font>")
+end
+end
+end
 end
 
-function ChooseSkin()
-	if Menu.Misc.skinList ~= lastSkin then
-		lastSkin = Menu.Misc.skinList
-		GenModelPacket(myHero.networkID, myHero.charName, Menu.Misc.skinList)
-	end
+function Harass(target)
+if Menu.Harass.UseQ and target then
+CastQ(target)
+end
+if Menu.Harass.UseW then
+CastW()
+end
+end
+
+function GetDistanceToClosestAlly(p)
+local d = GetDistance(p, myHero)
+for i, ally in ipairs(GetAllyHeroes()) do
+if ValidTarget(ally, math.huge, false) then
+local dist = GetDistance(p, ally)
+if dist < d then
+d = dist
+end
+end
+end
+return d
+end
+
+function CountAllyHeroInRange(range, point)
+local n = 0
+for i, ally in ipairs(GetAllyHeroes()) do
+if ValidTarget(ally, math.huge, false) and GetDistanceSqr(point, ally) <= range * range then
+n = n + 1
+end
+end
+return n
+end
+
+function Combo(target)
+if ComboMode == _ST then
+if target and ((GetDistanceSqr(target) < 300 * 300) or ((myHero.health/myHero.maxHealth <= 0.25) and (myHero.health/myHero.maxHealth < target.health/target.maxHealth))) then
+SxOrb:DisableAttacks()
+end
+
+if target and Menu.Combo.UseR and CountEnemyHeroInRange(1000, target) >= CountAllyHeroInRange(1000, target) then
+if target and GetComboDamage(MainCombo, target) > target.health and GetDistanceToClosestAlly(BallPos) < Qrange * Far then
+local hitcount, hit = CheckEnemiesHitByR()
+if hitcount >= Menu.Combo.UseRN then
+CastR(target)
+end
+end
+end
+
+if Menu.Combo.UseW then
+CastW()
+end
+
+if Menu.Combo.UseQ and target and QREADY then
+CastQ(target)
+end
+
+if Menu.Combo.UseE then
+for i, ally in ipairs(GetAllyHeroes()) do
+if ValidTarget(ally, math.huge, false) and GetDistance(ally) < Erange and CountEnemyHeroInRange(400, ally) >= 1 and (target == nil or GetDistance(ally, target) < 400) then
+CastE(ally)
+end
+end
+end
+
+if Menu.Combo.UseE then
+CastECH(myHero, 1)
+end
+else
+for i, enemy in ipairs(GetEnemyHeroes()) do
+if ValidTarget(enemy) and (GetDistanceSqr(enemy) < 300 * 300) and (myHero.health/myHero.maxHealth <= 0.25) then
+SxOrb:DisableAttacks()
+end
+end
+if Menu.Combo.UseR then
+if CountEnemyHeroInRange(800, BallPos) > 1 then
+local hitcount, hit = CheckEnemiesHitByR()
+local potentialkills, kills = 0, 0
+if hitcount >= 2 then
+for i, champion in ipairs(hit) do
+if (champion.health - GetComboDamage(MainCombo, champion)) < 0.4*champion.maxHealth or (GetComboDamage(MainCombo, champion) >= 0.4*champion.maxHealth) then
+potentialkills = potentialkills + 1
+end
+if (champion.health - GetComboDamage(MainCombo, champion)) < 0 then
+kills = kills + 1
+end
+end
+end
+if (((GetDistanceToClosestAlly(BallPos) < Qrange * Far) and ((hitcount >= CountEnemyHeroInRange(800, BallPos))) or (potentialkills >= 2)) or kills >= 1) and hitcount >= Menu.Combo.UseRN then
+Packet('S_CAST', {spellId = _R}):send()
+end
+elseif Menu.Combo.UseRN == 1 then
+if target and GetComboDamage({_Q, _W, _R}, target) > target.health and GetDistanceToClosestAlly(BallPos) < Qrange * Far then
+CastR(target)
+end
+end
+end
+
+if Menu.Combo.UseW then
+CastW()
+end
+if target and SxOrb:InRange(target) then
+SxOrb:ForceTarget(target)
+end
+
+if Menu.Combo.UseQ and target then
+local Qposition, hit = FindBestLocationToQ(target)
+
+if Qposition and hit > 1 then
+CastSpell(_Q, Qposition.x, Qposition.z)
+else
+CastQ(target)
+end
+end
+
+if Menu.Combo.UseE and EREADY then
+if CountEnemyHeroInRange(800, BallPos) <= 2 then
+CastECH(myHero, 1)
+else
+CastECH(myHero, 2)
+end
+
+
+for i, ally in ipairs(GetAllyHeroes()) do
+if ValidTarget(ally, Erange, false) and CountEnemyHeroInRange(300, ally) >= 3 and (target == nil or GetDistance(ally, target) < 300) then
+CastSpell(_E, ally)
+end
+end
+end
+end
+end
+
+function OnTick()
+OnTickChecks()
+SxOrb:EnableAttacks()
+SxOrb:ForceTarget()
+local target = GetBestTarget(Qrange + Qradius)
+if not target then
+target = GetBestTarget(Qrange + Qradius * 2)
+end
+if Menu.Combo.Enabled then
+Combo(target)
+elseif (Menu.Harass.Enabled or Menu.Harass.Enabled2) and (Menu.Harass.ManaCheck <= (myHero.mana / myHero.maxMana * 100)) then
+Harass(target)
+end
+
+if Menu.Farm.Freeze or Menu.Farm.LaneClear then
+local Mode = Menu.Farm.Freeze and "Freeze" or "LaneClear"
+if Menu.Farm.ManaCheck >= (myHero.mana / myHero.maxMana * 100) then
+Mode = "Freeze"
+end
+
+Farm(Mode)
+end
+
+if Menu.JungleFarm.Enabled then
+FarmJungle()
+end
+end
+
+
+function OnSendPacket(p)
+if (Menu.Misc.BlockR) and (p.header == 0xDE) then
+p.pos = 26
+local spellId = p:Decode1()
+if (spellId == 3) then
+local hitnumber, hit = CheckEnemiesHitByR()
+if hitnumber == 0 then
+p:Block()
+end
+end
+end
+end
+
+function RefreshKillableTexts()
+if ((os.clock() - lastrefresh) > 0.3) and Menu.Drawing.DrawDamage then
+for i=1, heroManager.iCount do
+local enemy = heroManager:GetHero(i)
+if ValidTarget(enemy) then
+DamageToHeros[i] = GetComboDamage(MainCombo, enemy)
+end
+end
+lastrefresh = os.clock()
+end
+end
+
+function GetHPBarPos(enemy)
+enemy.barData = GetEnemyBarData()
+local barPos = GetUnitHPBarPos(enemy)
+local barPosOffset = GetUnitHPBarOffset(enemy)
+local barOffset = { x = enemy.barData.PercentageOffset.x, y = enemy.barData.PercentageOffset.y }
+local barPosPercentageOffset = { x = enemy.barData.PercentageOffset.x, y = enemy.barData.PercentageOffset.y }
+local BarPosOffsetX = 171
+local BarPosOffsetY = 46
+local CorrectionY = 0
+local StartHpPos = 31
+barPos.x = barPos.x + (barPosOffset.x - 0.5 + barPosPercentageOffset.x) * BarPosOffsetX + StartHpPos
+barPos.y = barPos.y + (barPosOffset.y - 0.5 + barPosPercentageOffset.y) * BarPosOffsetY + CorrectionY
+
+local StartPos = Vector(barPos.x , barPos.y, 0)
+local EndPos = Vector(barPos.x + 108 , barPos.y , 0)
+
+return Vector(StartPos.x, StartPos.y, 0), Vector(EndPos.x, EndPos.y, 0)
+end
+
+function DrawIndicator(unit, health)
+local SPos, EPos = GetHPBarPos(unit)
+local barlenght = EPos.x - SPos.x
+local Position = SPos.x + (health / unit.maxHealth) * barlenght
+if Position < SPos.x then
+Position = SPos.x
+end
+DrawText("|", 13, Position, SPos.y+10, ARGB(255,0,255,0))
+end
+
+function DrawOnHPBar(unit, health)
+local Pos = GetHPBarPos(unit)
+if health < 0 then
+DrawCircle2(unit.x, unit.y, unit.z, 100, ARGB(255, 255, 0, 0))	
+DrawText("HP: "..health,13, Pos.x, Pos.y, ARGB(255,255,0,0))
+else
+DrawText("HP: "..health,13, Pos.x, Pos.y, ARGB(255,0,255,0))
+end
 end
 
 function DrawCircleNextLvl(x, y, z, radius, width, color, chordlength)
-  radius = radius or 300
-  quality = math.max(8,round(180/math.deg((math.asin((chordlength/(2*radius)))))))
-  quality = 2 * math.pi / quality
-  radius = radius*.92
-  
-  local points = {}
-  for theta = 0, 2 * math.pi + quality, quality do
-    local c = WorldToScreen(D3DXVECTOR3(x + radius * math.cos(theta), y, z - radius * math.sin(theta)))
-    points[#points + 1] = D3DXVECTOR2(c.x, c.y)
-  end
-  
-  DrawLines2(points, width or 1, color or 4294967295)
+radius = radius or 300
+quality = math.max(8,math.floor(180/math.deg((math.asin((chordlength/(2*radius)))))))
+quality = 2 * math.pi / quality
+local points = {}
+for theta = 0, 2 * math.pi + quality, quality do
+local c = WorldToScreen(D3DXVECTOR3(x + radius * math.cos(theta), y, z - radius * math.sin(theta)))
+points[#points + 1] = D3DXVECTOR2(c.x, c.y)
 end
-
-function round(num) 
-  if num >= 0 then return math.floor(num+.5) else return math.ceil(num-.5) end
+DrawLines2(points, width or 1, color or 4294967295)
 end
 
 function DrawCircle2(x, y, z, radius, color)
-  local vPos1 = Vector(x, y, z)
-  local vPos2 = Vector(cameraPos.x, cameraPos.y, cameraPos.z)
-  local tPos = vPos1 - (vPos1 - vPos2):normalized() * radius
-  local sPos = WorldToScreen(D3DXVECTOR3(tPos.x, tPos.y, tPos.z))
-  
-  if OnScreen({ x = sPos.x, y = sPos.y }, { x = sPos.x, y = sPos.y }) then
-    DrawCircleNextLvl(x, y, z, radius, Menu.Drawing.lfc.Width, color, Menu.Drawing.lfc.CL) 
-  end
+local vPos1 = Vector(x, y, z)
+local vPos2 = Vector(cameraPos.x, cameraPos.y, cameraPos.z)
+local tPos = vPos1 - (vPos1 - vPos2):normalized() * radius
+local sPos = WorldToScreen(D3DXVECTOR3(tPos.x, tPos.y, tPos.z))
+if OnScreen({ x = sPos.x, y = sPos.y }, { x = sPos.x, y = sPos.y }) then
+DrawCircleNextLvl(x, y, z, radius, 1, color, 75)	
+end
 end
 
-function TrueRange()
-	return myHero.range + GetDistance(myHero, myHero.minBBox)
+
+function OnDraw()
+if Menu.Drawing.AArange then
+DrawCircle2(myHero.x, myHero.y, myHero.z, SxOrb:GetMyRange() + 50, ARGB(255, 0, 255, 0))
 end
 
-function AutoIgnite()
-	for _, enemy in ipairs(GetEnemyHeroes()) do
-		if Ignite ~= nil then
-			if ValidTarget(enemy) and enemy.visible and GetDistance(enemy) <= 600 and enemy.health <= getDmg("IGNITE", enemy, myHero) then
-				CastSpell(Ignite, enemy)
-			end
-		end
-	end
+if Menu.Drawing.Qrange then
+DrawCircle2(myHero.x, myHero.y, myHero.z, Qrange, ARGB(255, 0, 255, 0))
+end
+
+if Menu.Drawing.Erange then
+DrawCircle2(myHero.x, myHero.y, myHero.z, Erange, ARGB(255, 0, 255, 0))
+end
+
+if Menu.Drawing.Wrange then
+DrawCircle2(BallPos.x, BallPos.y, BallPos.z, Wradius, ARGB(255,0,255,0))
+end
+
+if Menu.Drawing.Rrange then
+DrawCircle2(BallPos.x, BallPos.y, BallPos.z, Rradius, ARGB(255,0,255,0))
+end
+
+if Menu.Drawing.DrawBall then
+DrawCircle2(BallPos.x, BallPos.y, BallPos.z, 100, ARGB(255,0,255,0))
+end
+
+if Menu.Drawing.DrawDamage then
+for i=1, heroManager.iCount do
+local enemy = heroManager:GetHero(i)
+if ValidTarget(enemy) then
+if DamageToHeros[i] ~= nil then
+RemainingHealth = enemy.health - DamageToHeros[i]
+end
+if RemainingHealth ~= nil then
+DrawIndicator(enemy, math.floor(RemainingHealth))
+DrawOnHPBar(enemy, math.floor(RemainingHealth))
+end
+end
+end
+end
+
+if SelectedTarget ~= nil and ValidTarget(SelectedTarget) then
+DrawCircle2(SelectedTarget.x, SelectedTarget.y, SelectedTarget.z, 100, ARGB(255,255,0,0))
+end
 end
 
 PrintMessage("Version "..version.." loaded successully!")
