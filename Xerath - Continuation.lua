@@ -1,4 +1,4 @@
-local version = "1.09"
+local version = "1.10"
 
 if myHero.charName ~= "Xerath" or not VIP_USER then return end
 
@@ -360,6 +360,22 @@ function SetQRange()
 end
 TickLimiter(SetQRange, 120)
 
+function RecPing(x,z)
+  packet = CLoLPacket(0x60)
+  packet.dwArg1 = 1
+  packet.dwArg2 = 0
+  for i=1, 8 do
+    packet:Encode1(0) 
+  end
+  packet:Encode1(0x00) -- <== Ping Type
+  packet:EncodeF(myHero.networkID) 
+  packet:EncodeF(x) 
+  packet:EncodeF(z) 
+  packet:Encode1(0xB) 
+  packet:EncodeF(GetGameTimer()) 
+  RecvPacket(packet) 
+end
+
 function Cast1Q(to)
 	IsCastingQ = true
 	local p = CLoLPacket(0xDE) 
@@ -497,7 +513,7 @@ function OnTick()
 		for i, enemy in ipairs(GetEnemyHeroes()) do
 			if ValidTarget(enemy, R.range) and DLib:IsKillable(enemy, GetRCombo()) then
 				for i = 1, 3 do
-					DelayAction(PingClient,  1000 * 0.3 * i/1000, {enemy.x, enemy.z})
+					DelayAction(RecPing,  1000 * 0.3 * i/1000, {enemy.x, enemy.z})
 				end
 				LastPing = os.clock()
 			end
