@@ -23,7 +23,6 @@ ItemRecipes.lua=http://pastebin.com/raw.php?i=hTM4bVC6
 LEVEL.lua=https://raw.githubusercontent.com/fter44/ilikeman/master/common/LEVEL.lua
 LineSkillShotPosition.lua=https://raw.githubusercontent.com/Dienofail/BoL/master/common/LineSkillShotPosition.lua
 MapPosition.lua=https://raw.githubusercontent.com/c3iL/BoL-1/master/MapPosition.lua
-PPrediction.lua=https://raw.githubusercontent.com/Dienofail/BoL/master/common/PPrediction.lua
 Prodiction.lua=https://bitbucket.org/Klokje/public-klokjes-bol-scripts/raw/master/Test/Prodiction/Prodiction.lua
 RivenORB.lua=https://raw.githubusercontent.com/kokosik1221/bol/master/RivenORB.lua
 SALib.lua=https://raw.githubusercontent.com/SkeemBoL/NintendoBoL/master/BH%20Bundle/Common/SALib.lua
