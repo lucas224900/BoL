@@ -19,7 +19,7 @@ ImBeastyLib.lua=http://scripts.imbeasty.com/ImBeastyLib.lua
 ImLib.lua=https://bitbucket.org/Klokje/public-klokjes-bol-scripts/raw/master/Common/ImLib.lua
 iSAC.lua=https://raw.githubusercontent.com/BoL-Apple/BoL/master/Common/iSAC.lua
 ITEM_MANAGER.lua=https://raw.githubusercontent.com/fter44/ilikeman/master/common/ITEM_MANAGER.lua
-ItemRecipes.lua=http://pastebin.com/raw.php?i=hTM4bVC6
+ItemRecipes.lua=https://raw.githubusercontent.com/lucas224900/BoL/master/ItemRecipes.lua
 LEVEL.lua=https://raw.githubusercontent.com/fter44/ilikeman/master/common/LEVEL.lua
 LineSkillShotPosition.lua=https://raw.githubusercontent.com/Dienofail/BoL/master/common/LineSkillShotPosition.lua
 MapPosition.lua=https://raw.githubusercontent.com/c3iL/BoL-1/master/MapPosition.lua
