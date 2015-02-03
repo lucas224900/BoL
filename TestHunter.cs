@@ -80,10 +80,10 @@ namespace ReBot
             Version CurrentVersion = new Version("1.0.2");
 			using (WebClient client = new WebClient())
 			{
-				Version latest = new Version(client.DownloadString("https://raw.githubusercontent.com/Jizar07/Rebot-Combat-Rotations/master/Hunter/Survivalist.cs"));
+				Version latest = new Version(client.DownloadString("https://raw.githubusercontent.com/lucas224900/BoL/master/TestUpdate.txt"));
 				if (CurrentVersion > latest)
                 {
-                    System.IO.File.WriteAllText("C:/Users/Lucas J Loveless/Downloads/ReBot/CombatRotations/Default/Hunter/TestHunter.cs", client.DownloadString("https://raw.githubusercontent.com/Jizar07/Rebot-Combat-Rotations/master/Hunter/Survivalist.cs"));
+                    System.IO.File.WriteAllText("C:/Users/Lucas J Loveless/Downloads/ReBot/CombatRotations/Default/Hunter/TestHunter.cs", client.DownloadString("https://raw.githubusercontent.com/lucas224900/BoL/master/TestHunter.cs"));
                     return;
                 }
 			}
