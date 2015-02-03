@@ -63,7 +63,7 @@ namespace ReBot
 		
 	
 		public BestMaster()
-
+        {
             Version CurrentVersion = new Version("1.0");
 			using (WebClient client = new WebClient())
 			{
@@ -74,7 +74,7 @@ namespace ReBot
                     return;
                 }
 			}
-			
+
 			PullSpells = new string[]
 			{
 				"Concussive Shot",
